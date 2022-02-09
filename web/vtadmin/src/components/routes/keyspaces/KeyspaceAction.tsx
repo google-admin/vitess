@@ -39,7 +39,7 @@ const KeyspaceAction: React.FC<KeyspaceActionProps> = ({ isOpen, closeDialog, mu
             >
                 <div className="w-full">
                     {!mutation.error && !mutation.data && body}
-                    {mutation.data && (
+                    {mutation.data && !mutation.error && (
                         <div className="w-full flex flex-col justify-center items-center">
                             <span className="flex h-12 w-12 relative items-center justify-center">
                                 <Icon className="fill-current text-green-500" icon={Icons.checkSuccess} />
@@ -49,6 +49,13 @@ const KeyspaceAction: React.FC<KeyspaceActionProps> = ({ isOpen, closeDialog, mu
                         </div>
                     )
                     }
+                    {mutation.error &&
+                        <div className="w-full flex flex-col justify-center items-center">
+                            <span className="flex h-12 w-12 relative items-center justify-center">
+                                <Icon className="fill-current text-green-500" icon={Icons.alertFail} />
+                            </span>
+                            <div className="text-lg mt-3 font-bold">{errorText}</div>
+                        </div>}
                 </div>
             </Dialog>
         </div >
