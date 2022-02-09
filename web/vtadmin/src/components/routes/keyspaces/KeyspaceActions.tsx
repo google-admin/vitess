@@ -28,6 +28,8 @@ const KeyspaceActions: React.FC<KeyspaceActionsProps> = ({ keyspace, clusterID }
         <div className="w-min inline-block">
             <Dropdown dropdownButton={Icons.info} position="bottom-right">
                 <MenuItem onClick={openDialog}>Validate Keyspace</MenuItem>
+                <MenuItem onClick={openDialog}>Validate Schema</MenuItem>
+                <MenuItem onClick={openDialog}>Validate Version</MenuItem>
             </Dropdown>
             <Dialog
                 isOpen={isOpen}
@@ -38,12 +40,13 @@ const KeyspaceActions: React.FC<KeyspaceActionsProps> = ({ keyspace, clusterID }
                 loading={validateKeyspaceMutation.isLoading}
                 onCancel={closeDialog}
                 onClose={() => {
-                    validateKeyspaceMutation.reset()
+                    setTimeout(validateKeyspaceMutation.reset, 500)
                     setPingTablets(false)
                     closeDialog()
                 }}
-                title="Validate Keyspace"
-                description={`Validates that all nodes reachable from keyspace "${keyspace}" are consistent.`}
+                hideFooter={Boolean(validateKeyspaceMutation.data)}
+                title={validateKeyspaceMutation.data ? undefined : "Validate Keyspace"}
+                description={validateKeyspaceMutation.data ? undefined : `Validates that all nodes reachable from keyspace "${keyspace}" are consistent.`}
             >
                 <div className="w-full">
                     {!validateKeyspaceMutation.error && !validateKeyspaceMutation.data && (
@@ -56,25 +59,25 @@ const KeyspaceActions: React.FC<KeyspaceActionsProps> = ({ keyspace, clusterID }
                         </div>
                     )}
                     {validateKeyspaceMutation.data && (
-                        <div className="w-full flex flex-col justify-center items-center border rounded-md border-green-500 p-2">
-                            <span className="flex relative w-full">
+                        <div className="w-full flex flex-col justify-center items-center">
+                            <span className="flex h-12 w-12 relative items-center justify-center">
                                 <Icon className="fill-current text-green-500" icon={Icons.checkSuccess} />
-                                <div className="ml-2">
-                                    <h5 className="font-medium font-bold">Validated keyspace</h5>
-                                    {validateKeyspaceMutation.data.results.length === 0 && <div className="italic text-sm text-gray-500">No validation errors found.</div>}
-                                    {validateKeyspaceMutation.data.results.length > 0 &&
-                                        <ul>
-                                            {validateKeyspaceMutation.data.results.map((res, i) => <li className="text-sm" key={`keyspace_validation_result_${i}`}>• {res}</li>)}
-                                        </ul>
-                                    }
-                                </div>
                             </span>
+                            <div className="text-lg mt-3 font-bold">Validated keyspace</div>
+                            <div className="text-sm">
+                                {validateKeyspaceMutation.data.results.length === 0 && <div className="text-sm">No validation errors found.</div>}
+                                {validateKeyspaceMutation.data.results.length > 0 &&
+                                    <ul>
+                                        {validateKeyspaceMutation.data.results.map((res, i) => <li className="text-sm" key={`keyspace_validation_result_${i}`}>• {res}</li>)}
+                                    </ul>
+                                }
+                            </div>
                         </div>
                     )
                     }
                 </div>
             </Dialog>
-        </div>
+        </div >
     );
 };
 
