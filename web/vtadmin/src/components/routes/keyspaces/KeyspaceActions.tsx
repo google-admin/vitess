@@ -56,15 +56,15 @@ const KeyspaceActions: React.FC<KeyspaceActionsProps> = ({ keyspace, clusterID }
                         </div>
                     )}
                     {validateKeyspaceMutation.data && (
-                        <div className="w-full flex flex-col justify-center items-center border rounded-md border-green-500 p-4">
+                        <div className="w-full flex flex-col justify-center items-center border rounded-md border-green-500 p-2">
                             <span className="flex relative w-full">
                                 <Icon className="fill-current text-green-500" icon={Icons.checkSuccess} />
                                 <div className="ml-2">
-                                    <h5 className="font-bold">Validated keyspace</h5>
-                                    {validateKeyspaceMutation.data.results.length === 0 && <div className="italic text-gray-500">No validation errors found.</div>}
+                                    <h5 className="font-medium font-bold">Validated keyspace</h5>
+                                    {validateKeyspaceMutation.data.results.length === 0 && <div className="italic text-sm text-gray-500">No validation errors found.</div>}
                                     {validateKeyspaceMutation.data.results.length > 0 &&
                                         <ul>
-                                            {validateKeyspaceMutation.data.results.map((res, i) => <li key={`keyspace_validation_result_${i}`}>• {res}</li>)}
+                                            {validateKeyspaceMutation.data.results.map((res, i) => <li className="text-sm" key={`keyspace_validation_result_${i}`}>• {res}</li>)}
                                         </ul>
                                     }
                                 </div>

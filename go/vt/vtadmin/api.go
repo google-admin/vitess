@@ -714,7 +714,7 @@ func (api *API) ValidateKeyspace(ctx context.Context, req *vtadminpb.ValidateKey
 		return nil, nil
 	}
 
-	_, err := c.Vtctld.ValidateKeyspace(ctx, &vtctldatapb.ValidateKeyspaceRequest{
+	res, err := c.Vtctld.ValidateKeyspace(ctx, &vtctldatapb.ValidateKeyspaceRequest{
 		Keyspace:    req.Keyspace,
 		PingTablets: req.PingTablets,
 	})
@@ -723,10 +723,7 @@ func (api *API) ValidateKeyspace(ctx context.Context, req *vtadminpb.ValidateKey
 		return nil, err
 	}
 
-	return &vtctldatapb.ValidateKeyspaceResponse{
-		Results: []string{"Sample error 1", "Sample error 2"},
-	}, nil
-	// return res, nil
+	return res, nil
 }
 
 // GetSchema is part of the vtadminpb.VTAdminServer interface.
