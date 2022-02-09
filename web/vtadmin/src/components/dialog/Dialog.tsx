@@ -9,7 +9,7 @@ interface DialogProps {
     description?: string;
     content?: React.ReactElement;
     onCancel?: () => void;
-    onConfirm?: () => void;
+    onConfirm?: Function;
     onClose?: () => void;
     loading?: boolean;
     loadingText?: string;
