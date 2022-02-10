@@ -2938,7 +2938,6 @@ func (s *VtctldServer) ValidateSchemaKeyspace(ctx context.Context, req *vtctldat
 						return
 					}
 
-					log.Infof("Diffing schema for %v", topoproto.TabletAliasString(alias))
 					tmutils.DiffSchema(topoproto.TabletAliasString(referenceAlias), referenceSchema, topoproto.TabletAliasString(alias), replicaSchema, &aliasErrs)
 				}(alias)
 			}
