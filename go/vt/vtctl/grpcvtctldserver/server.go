@@ -3145,17 +3145,3 @@ func (s *VtctldServer) ValidateShard(ctx context.Context, req *vtctldatapb.Valid
 func StartServer(s *grpc.Server, ts *topo.Server) {
 	vtctlservicepb.RegisterVtctldServer(s, NewVtctldServer(ts))
 }
-
-// helper method to asynchronously diff a schema
-func (s *VtctldServer) diffSchema(ctx context.Context, primarySchema *tabletmanagerdatapb.SchemaDefinition, primaryTabletAlias, alias *topodatapb.TabletAlias, excludeTables []string, includeViews bool, wg *sync.WaitGroup, er concurrency.ErrorRecorder) {
-	defer wg.Done()
-	log.Infof("Gathering schema for %v", topoproto.TabletAliasString(alias))
-	replicaSchema, err := schematools.GetSchema(ctx, s.ts, s.tmc, alias, nil, excludeTables, includeViews)
-	if err != nil {
-		er.RecordError(fmt.Errorf("GetSchema(%v, nil, %v, %v) failed: %v", alias, excludeTables, includeViews, err))
-		return
-	}
-
-	log.Infof("Diffing schema for %v", topoproto.TabletAliasString(alias))
-	tmutils.DiffSchema(topoproto.TabletAliasString(primaryTabletAlias), primarySchema, topoproto.TabletAliasString(alias), replicaSchema, er)
-}
