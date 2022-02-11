@@ -727,9 +727,9 @@ func (api *API) ValidateKeyspace(ctx context.Context, req *vtadminpb.ValidateKey
 	return res, nil
 }
 
-// ValidateSchemaKeyspace
+// ValidateSchemaKeyspace validates that the schema on the primary tablet for shard 0 matches the schema on all of the other tablets in the keyspace
 func (api *API) ValidateSchemaKeyspace(ctx context.Context, req *vtadminpb.ValidateSchemaKeyspaceRequest) (*vtctldatapb.ValidateSchemaKeyspaceResponse, error) {
-	span, ctx := trace.NewSpan(ctx, "API.ValidateKeyspace")
+	span, ctx := trace.NewSpan(ctx, "API.ValidateSchemaKeyspace")
 	defer span.Finish()
 
 	c, ok := api.clusterMap[req.ClusterId]
@@ -739,6 +739,10 @@ func (api *API) ValidateSchemaKeyspace(ctx context.Context, req *vtadminpb.Valid
 
 	if !api.authz.IsAuthorized(ctx, c.ID, rbac.KeyspaceResource, rbac.PutAction) {
 		return nil, nil
+	}
+
+	if err := c.Vtctld.Dial(ctx); err != nil {
+		return nil, err
 	}
 
 	res, err := c.Vtctld.ValidateSchemaKeyspace(ctx, &vtctldatapb.ValidateSchemaKeyspaceRequest{

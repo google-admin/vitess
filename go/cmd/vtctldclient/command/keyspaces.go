@@ -90,6 +90,12 @@ var (
 		Args:                  cobra.RangeArgs(1, 3),
 		RunE:                  commandSetKeyspaceShardingInfo,
 	}
+	ValidateSchemaKeyspace = &cobra.Command{
+		Use:     "ValidateSchemaKeyspace keyspace",
+		Aliases: []string{"validatekeyspace"},
+		Args:    cobra.ExactArgs(1),
+		RunE:    commandValidateSchemaKeyspace,
+	}
 )
 
 var createKeyspaceOptions = struct {
@@ -375,6 +381,23 @@ func commandSetKeyspaceShardingInfo(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+func commandValidateSchemaKeyspace(cmd *cobra.Command, args []string) error {
+	cli.FinishedParsing(cmd)
+
+	ks := cmd.Flags().Arg(0)
+	resp, err := client.ValidateSchemaKeyspace(commandCtx, &vtctldatapb.ValidateSchemaKeyspaceRequest{
+		Keyspace: ks,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("%+v\n", resp.Results)
+
+	return nil
+}
+
 func init() {
 	CreateKeyspace.Flags().BoolVarP(&createKeyspaceOptions.Force, "force", "f", false, "Proceeds even if the keyspace already exists. Does not overwrite the existing keyspace record")
 	CreateKeyspace.Flags().BoolVarP(&createKeyspaceOptions.AllowEmptyVSchema, "allow-empty-vschema", "e", false, "Allows a new keyspace to have no vschema")
@@ -404,4 +427,6 @@ func init() {
 
 	SetKeyspaceShardingInfo.Flags().BoolVarP(&setKeyspaceShardingInfoOptions.Force, "force", "f", false, "Updates fields even if they are already set. Use caution before passing force to this command.")
 	Root.AddCommand(SetKeyspaceShardingInfo)
+
+	Root.AddCommand(ValidateSchemaKeyspace)
 }
