@@ -93,7 +93,7 @@ type VTAdminClient interface {
 	StopReplication(ctx context.Context, in *StopReplicationRequest, opts ...grpc.CallOption) (*StopReplicationResponse, error)
 	// ValidateKeyspace validates that all nodes reachable from the specified keyspace are consistent.
 	ValidateKeyspace(ctx context.Context, in *ValidateKeyspaceRequest, opts ...grpc.CallOption) (*vtctldata.ValidateKeyspaceResponse, error)
-	// ValidateSchemaKeyspace
+	// ValidateSchemaKeyspace validates that the schema on the primary tablet for shard 0 matches the schema on all of the other tablets in the keyspace
 	ValidateSchemaKeyspace(ctx context.Context, in *ValidateSchemaKeyspaceRequest, opts ...grpc.CallOption) (*vtctldata.ValidateSchemaKeyspaceResponse, error)
 	// VTExplain provides information on how Vitess plans to execute a particular query.
 	VTExplain(ctx context.Context, in *VTExplainRequest, opts ...grpc.CallOption) (*VTExplainResponse, error)
@@ -491,7 +491,7 @@ type VTAdminServer interface {
 	StopReplication(context.Context, *StopReplicationRequest) (*StopReplicationResponse, error)
 	// ValidateKeyspace validates that all nodes reachable from the specified keyspace are consistent.
 	ValidateKeyspace(context.Context, *ValidateKeyspaceRequest) (*vtctldata.ValidateKeyspaceResponse, error)
-	// ValidateSchemaKeyspace
+	// ValidateSchemaKeyspace validates that the schema on the primary tablet for shard 0 matches the schema on all of the other tablets in the keyspace
 	ValidateSchemaKeyspace(context.Context, *ValidateSchemaKeyspaceRequest) (*vtctldata.ValidateSchemaKeyspaceResponse, error)
 	// VTExplain provides information on how Vitess plans to execute a particular query.
 	VTExplain(context.Context, *VTExplainRequest) (*VTExplainResponse, error)
