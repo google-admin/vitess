@@ -980,3 +980,12 @@ message ValidateShardRequest {
 message ValidateShardResponse {
   repeated string results = 1;
 }
+
+message ValidateVersionKeyspaceRequest {
+  string keyspace = 1;
+}
+
+message ValidateVersionKeyspaceResponse {
+  repeated string results = 1;
+  map<string, ValidateShardResponse> results_by_shard = 2;
+}
