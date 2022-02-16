@@ -2868,6 +2868,9 @@ func (s *VtctldServer) ValidateSchemaKeyspace(ctx context.Context, req *vtctldat
 		wg sync.WaitGroup
 	)
 
+	// TO DO: Use `IncludeVschema` parameter to determine whether or not to also add results from ValidateVschema to the results array.
+	// Unimplemented for now because ValidateVSchema method is out of scope.
+
 	// Diff all tablets in the other shards
 	for _, shard := range shards[0:] {
 		wg.Add(1)
@@ -2892,10 +2895,12 @@ func (s *VtctldServer) ValidateSchemaKeyspace(ctx context.Context, req *vtctldat
 			}
 
 			if !si.HasPrimary() {
-				errMessage := fmt.Sprintf("no primary in shard %v/%v", keyspace, shard)
-				shardResp.Results = append(shardResp.Results, errMessage)
-				resp.Results = append(resp.Results, errMessage)
-				resp.ResultsByShard[shard] = &shardResp
+				if !req.SkipNoPrimary {
+					errMessage := fmt.Sprintf("no primary in shard %v/%v", keyspace, shard)
+					shardResp.Results = append(shardResp.Results, errMessage)
+					resp.Results = append(resp.Results, errMessage)
+					resp.ResultsByShard[shard] = &shardResp
+				}
 				return
 			}
 
@@ -2932,9 +2937,9 @@ func (s *VtctldServer) ValidateSchemaKeyspace(ctx context.Context, req *vtctldat
 				go func(alias *topodatapb.TabletAlias) {
 					defer aliasWg.Done()
 					log.Infof("Gathering schema for %v", topoproto.TabletAliasString(alias))
-					replicaSchema, err := schematools.GetSchema(ctx, s.ts, s.tmc, alias, nil, []string{} /*excludeTables*/, false /*includeViews*/)
+					replicaSchema, err := schematools.GetSchema(ctx, s.ts, s.tmc, alias, nil, req.ExcludeTables, req.InludeViews)
 					if err != nil {
-						aliasErrs.RecordError(fmt.Errorf("GetSchema(%v, nil, %v, %v) failed: %v", alias, []string{} /*excludeTables*/, false /*includeViews*/, err))
+						aliasErrs.RecordError(fmt.Errorf("GetSchema(%v, nil, %v, %v) failed: %v", alias, req.ExcludeTables, req.InludeViews, err))
 						return
 					}
 
