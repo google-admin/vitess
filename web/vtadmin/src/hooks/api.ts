@@ -55,6 +55,8 @@ import {
     validateKeyspace,
     validateSchemaKeyspace,
     ValidateSchemaKeyspaceParams,
+    validateVersionKeyspace,
+    ValidateVersionKeyspaceParams,
 } from '../api/http';
 import { vtadmin as pb, vtctldata } from '../proto/vtadmin';
 import { formatAlias } from '../util/tablets';
@@ -325,11 +327,20 @@ export const useValidateKeyspace = (params: ValidateKeyspaceParams, options?: Us
 }
 
 /**
- * useValidateKeyspace is a query hook that validates that all nodes reachable from the specified keyspace are consistent.
+ * useValidateSchemaKeyspace is a mutation hook that validates that all nodes reachable from the specified keyspace are consistent.
  */
  export const useValidateSchemaKeyspace = (params: ValidateSchemaKeyspaceParams, options?: UseMutationOptions<Awaited<ReturnType<typeof validateSchemaKeyspace>>, Error>) => {
     return useMutation<Awaited<ReturnType<typeof validateSchemaKeyspace>>, Error>(() => {
         return validateSchemaKeyspace(params);
+    }, options);
+}
+
+/**
+ * useValidateVersionKeyspace is a mutation hook that validates that the version on the primary of shard 0 matches all of the other tablets in the keyspace.
+ */
+ export const useValidateVersionKeyspace = (params: ValidateVersionKeyspaceParams, options?: UseMutationOptions<Awaited<ReturnType<typeof validateVersionKeyspace>>, Error>) => {
+    return useMutation<Awaited<ReturnType<typeof validateVersionKeyspace>>, Error>(() => {
+        return validateVersionKeyspace(params);
     }, options);
 }
 

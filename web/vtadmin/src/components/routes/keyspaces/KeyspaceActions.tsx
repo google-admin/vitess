@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import Dropdown from '../../dropdown/Dropdown';
 import MenuItem from '../../dropdown/MenuItem';
-import { Icon, Icons } from '../../Icon';
-import Dialog from '../../dialog/Dialog'
+import { Icons } from '../../Icon';
 import Toggle from '../../toggle/Toggle';
-import { useValidateKeyspace, useValidateSchemaKeyspace } from '../../../hooks/api';
+import { useValidateKeyspace, useValidateSchemaKeyspace, useValidateVersionKeyspace } from '../../../hooks/api';
 import KeyspaceAction from './KeyspaceAction';
 
 interface KeyspaceActionsProps {
@@ -26,6 +25,8 @@ const KeyspaceActions: React.FC<KeyspaceActionsProps> = ({ keyspace, clusterID }
     // Validate schema keyspace
     const validateSchemaKeyspaceMutation = useValidateSchemaKeyspace({ keyspace, clusterID })
 
+    // Validate version keyspace
+    const validateVersionKeyspaceMutation = useValidateVersionKeyspace({ keyspace, clusterID })
 
     return (
         <div className="w-min inline-block">
@@ -80,6 +81,27 @@ const KeyspaceActions: React.FC<KeyspaceActionsProps> = ({ keyspace, clusterID }
                         {validateSchemaKeyspaceMutation.data && validateSchemaKeyspaceMutation.data.results.length > 0 &&
                             <ul>
                                 {validateSchemaKeyspaceMutation.data && validateSchemaKeyspaceMutation.data.results.map((res, i) => <li className="text-sm" key={`schema_keyspace_validation_result_${i}`}>• {res}</li>)}
+                            </ul>
+                        }
+                    </div>
+                }
+            />
+            <KeyspaceAction
+                title='Validate Version'
+                confirmText='Validate'
+                loadingText='Validating'
+                mutation={validateVersionKeyspaceMutation}
+                successText={`Validated versions of all tablets in keyspace ${keyspace}`}
+                errorText={`Error validating versions in keyspace ${keyspace}`}
+                closeDialog={closeDialog}
+                isOpen={currentDialog === 'Validate Version'}
+                body={<div className="text-sm mt-3">Validates that the version on the primary of shard 0 matches all of the other tablets in the keyspace <span className="font-mono bg-gray-300">{keyspace}</span>.</div>}
+                successBody={
+                    <div className="text-sm">
+                        {validateVersionKeyspaceMutation.data && validateVersionKeyspaceMutation.data.results.length === 0 && <div className="text-sm">No version validation errors found.</div>}
+                        {validateVersionKeyspaceMutation.data && validateVersionKeyspaceMutation.data.results.length > 0 &&
+                            <ul>
+                                {validateVersionKeyspaceMutation.data && validateVersionKeyspaceMutation.data.results.map((res, i) => <li className="text-sm" key={`schema_keyspace_validation_result_${i}`}>• {res}</li>)}
                             </ul>
                         }
                     </div>

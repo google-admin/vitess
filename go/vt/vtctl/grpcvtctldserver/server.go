@@ -2955,9 +2955,9 @@ func (s *VtctldServer) ValidateSchemaKeyspace(ctx context.Context, req *vtctldat
 				go func(alias *topodatapb.TabletAlias) {
 					defer aliasWg.Done()
 					log.Infof("Gathering schema for %v", topoproto.TabletAliasString(alias))
-					replicaSchema, err := schematools.GetSchema(ctx, s.ts, s.tmc, alias, nil, req.ExcludeTables, req.InludeViews)
+					replicaSchema, err := schematools.GetSchema(ctx, s.ts, s.tmc, alias, nil, req.ExcludeTables, req.IncludeViews)
 					if err != nil {
-						aliasErrs.RecordError(fmt.Errorf("GetSchema(%v, nil, %v, %v) failed: %v", alias, req.ExcludeTables, req.InludeViews, err))
+						aliasErrs.RecordError(fmt.Errorf("GetSchema(%v, nil, %v, %v) failed: %v", alias, req.ExcludeTables, req.IncludeViews, err))
 						return
 					}
 

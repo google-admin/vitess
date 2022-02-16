@@ -450,10 +450,22 @@ export interface ValidateSchemaKeyspaceParams {
 }
 
 export const validateSchemaKeyspace = async ({ clusterID, keyspace  }: ValidateSchemaKeyspaceParams) => {
-
     const { result } = await vtfetch(`/api/keyspace/${clusterID}/${keyspace}/validate_schema`, { method: 'put' });
     const err = vtctldata.ValidateSchemaKeyspaceResponse.verify(result);
     if (err) throw Error(err);
 
     return vtctldata.ValidateSchemaKeyspaceResponse.create(result);
+}
+
+export interface ValidateVersionKeyspaceParams {
+    clusterID: string
+    keyspace: string
+}
+
+export const validateVersionKeyspace = async ({ clusterID, keyspace }: ValidateVersionKeyspaceParams) => {
+    const { result } = await vtfetch(`/api/keyspace/${clusterID}/${keyspace}/validate_version`, { method: 'put' });
+    const err = vtctldata.ValidateVersionKeyspaceResponse.verify(result);
+    if (err) throw Error(err);
+
+    return vtctldata.ValidateVersionKeyspaceResponse.create(result);
 }

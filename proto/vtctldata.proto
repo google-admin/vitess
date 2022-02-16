@@ -961,7 +961,7 @@ message ValidateKeyspaceResponse {
 message ValidateSchemaKeyspaceRequest {
   string keyspace = 1;
   repeated string exclude_tables = 2;
-  bool inlude_views = 3;
+  bool include_views = 3;
   bool skip_no_primary = 4;
   bool include_vschema = 5;
 }

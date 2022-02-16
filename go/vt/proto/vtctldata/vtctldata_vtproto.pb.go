@@ -7150,9 +7150,9 @@ func (m *ValidateSchemaKeyspaceRequest) MarshalToSizedBufferVT(dAtA []byte) (int
 		i--
 		dAtA[i] = 0x20
 	}
-	if m.InludeViews {
+	if m.IncludeViews {
 		i--
-		if m.InludeViews {
+		if m.IncludeViews {
 			dAtA[i] = 1
 		} else {
 			dAtA[i] = 0
@@ -10354,7 +10354,7 @@ func (m *ValidateSchemaKeyspaceRequest) SizeVT() (n int) {
 			n += 1 + l + sov(uint64(l))
 		}
 	}
-	if m.InludeViews {
+	if m.IncludeViews {
 		n += 2
 	}
 	if m.SkipNoPrimary {
@@ -27066,7 +27066,7 @@ func (m *ValidateSchemaKeyspaceRequest) UnmarshalVT(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InludeViews", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field IncludeViews", wireType)
 			}
 			var v int
 			for shift := uint(0); ; shift += 7 {
@@ -27083,7 +27083,7 @@ func (m *ValidateSchemaKeyspaceRequest) UnmarshalVT(dAtA []byte) error {
 					break
 				}
 			}
-			m.InludeViews = bool(v != 0)
+			m.IncludeViews = bool(v != 0)
 		case 4:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SkipNoPrimary", wireType)
