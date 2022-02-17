@@ -2987,10 +2987,13 @@ func (s *VtctldServer) ValidateSchemaKeyspace(ctx context.Context, req *vtctldat
 // tablets in a keyspace
 func (s *VtctldServer) ValidateVersionKeyspace(ctx context.Context, req *vtctldatapb.ValidateVersionKeyspaceRequest) (*vtctldatapb.ValidateVersionKeyspaceResponse, error) {
 	keyspace := req.Keyspace
-	resp := vtctldatapb.ValidateVersionKeyspaceResponse{}
-
 	// find all the shards
 	shards, err := s.ts.GetShardNames(ctx, keyspace)
+	resp := vtctldatapb.ValidateVersionKeyspaceResponse{
+		Results:        []string{},
+		ResultsByShard: make(map[string]*vtctldatapb.ValidateShardResponse, len(shards)),
+	}
+
 	if err != nil {
 		resp.Results = append(resp.Results, fmt.Sprintf("TopologyServer.GetShardNames(%v) failed: %v", keyspace, err))
 		return &resp, nil
@@ -3025,7 +3028,9 @@ func (s *VtctldServer) ValidateVersionKeyspace(ctx context.Context, req *vtctlda
 
 	for _, shard := range shards {
 		m.Lock()
-		shardResp := vtctldatapb.ValidateShardResponse{}
+		shardResp := vtctldatapb.ValidateShardResponse{
+			Results: []string{},
+		}
 
 		var (
 			// Mutex for ValidateShardResponse
