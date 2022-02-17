@@ -1390,18 +1390,19 @@ func (s *VtctldServer) GetTablets(ctx context.Context, req *vtctldatapb.GetTable
 }
 
 // GetVersion returns the version string from a tablet
-func (s *VtctldServer) GetVersion(ctx context.Context, tabletAlias *topodatapb.TabletAlias) (string, error) {
+func (s *VtctldServer) GetVersion(ctx context.Context, req *vtctldatapb.GetVersionRequest) (*vtctldatapb.GetVersionResponse, error) {
+	tabletAlias := req.TabletAlias
 	tablet, err := s.ts.GetTablet(ctx, tabletAlias)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	version, err := getVersionFromTablet(tablet.Addr())
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	log.Infof("Tablet %v is running version '%v'", topoproto.TabletAliasString(tabletAlias), version)
-	return version, err
+	return &vtctldatapb.GetVersionResponse{Version: version}, err
 }
 
 // GetVSchema is part of the vtctlservicepb.VtctldServer interface.
@@ -3016,7 +3017,7 @@ func (s *VtctldServer) ValidateVersionKeyspace(ctx context.Context, req *vtctlda
 	}
 
 	referenceAlias := si.PrimaryAlias
-	referenceVersion, err := s.GetVersion(ctx, referenceAlias)
+	referenceVersion, err := s.GetVersion(ctx, &vtctldatapb.GetVersionRequest{TabletAlias: referenceAlias})
 	if err != nil {
 		resp.Results = append(resp.Results, fmt.Sprintf("unable to get reference version of first shard's primary tablet: %v", err))
 		return &resp, nil
@@ -3058,13 +3059,13 @@ func (s *VtctldServer) ValidateVersionKeyspace(ctx context.Context, req *vtctlda
 				sm.Lock()
 				defer sm.Unlock()
 				defer wg.Done()
-				replicaVersion, err := s.GetVersion(ctx, alias)
+				replicaVersion, err := s.GetVersion(ctx, &vtctldatapb.GetVersionRequest{TabletAlias: alias})
 				if err != nil {
 					shardResp.Results = append(shardResp.Results, fmt.Sprintf("unable to get version for tablet %v: %v", alias, err))
 					return
 				}
 
-				if referenceVersion != replicaVersion {
+				if referenceVersion.Version != replicaVersion.Version {
 					shardResp.Results = append(shardResp.Results, fmt.Sprintf("primary %v version %v is different than replica %v version %v", topoproto.TabletAliasString(referenceAlias), referenceVersion, topoproto.TabletAliasString(alias), replicaVersion))
 				}
 			}(alias, &sm)
@@ -3266,6 +3267,7 @@ func StartServer(s *grpc.Server, ts *topo.Server) {
 
 // Helper function to get version of a tablet from its debug vars
 var getVersionFromTabletDebugVars = func(tabletAddr string) (string, error) {
+	fmt.Printf("Tablet addr: %v", tabletAddr)
 	resp, err := http.Get("http://" + tabletAddr + "/debug/vars")
 	if err != nil {
 		return "", err
