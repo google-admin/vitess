@@ -9296,15 +9296,16 @@ func TestValidateSchemaKeyspace(t *testing.T) {
 			},
 			Hostname: "ks1-00-00-replica",
 		},
+		// ks2 shard -80 has no Primary intentionally for testing
 		{
 			Keyspace: "ks2",
 			Shard:    "-80",
-			Type:     topodatapb.TabletType_PRIMARY,
+			Type:     topodatapb.TabletType_REPLICA,
 			Alias: &topodatapb.TabletAlias{
 				Cell: "zone1",
 				Uid:  102,
 			},
-			Hostname: "ks2-00-80-primary",
+			Hostname: "ks2-00-80-replica0",
 		},
 		{
 			Keyspace: "ks2",
@@ -9316,25 +9317,16 @@ func TestValidateSchemaKeyspace(t *testing.T) {
 			},
 			Hostname: "ks2-00-80-replica1",
 		},
-		{
-			Keyspace: "ks2",
-			Shard:    "-80",
-			Type:     topodatapb.TabletType_REPLICA,
-			Alias: &topodatapb.TabletAlias{
-				Cell: "zone3",
-				Uid:  300,
-			},
-			Hostname: "ks2-00-80-replica2",
-		},
+		//
 		{
 			Keyspace: "ks2",
 			Shard:    "80-",
 			Type:     topodatapb.TabletType_PRIMARY,
 			Alias: &topodatapb.TabletAlias{
-				Cell: "zone3",
-				Uid:  301,
+				Cell: "zone1",
+				Uid:  103,
 			},
-			Hostname: "ks2-80-00-primary",
+			Hostname: "ks2-80-00-primary1",
 		},
 		{
 			Keyspace: "ks2",
@@ -9345,16 +9337,6 @@ func TestValidateSchemaKeyspace(t *testing.T) {
 				Uid:  201,
 			},
 			Hostname: "ks2-80-00-replica1",
-		},
-		{
-			Keyspace: "ks2",
-			Shard:    "80-",
-			Type:     topodatapb.TabletType_RDONLY,
-			Alias: &topodatapb.TabletAlias{
-				Cell: "zone1",
-				Uid:  103,
-			},
-			Hostname: "ks2-80-00-rdonly1",
 		},
 	}
 	testutil.AddTablets(ctx, t, ts, &testutil.AddTabletOptions{
@@ -9454,6 +9436,31 @@ func TestValidateSchemaKeyspace(t *testing.T) {
 					Cell: "zone1",
 					Uid:  101,
 				}, schema2)
+			},
+			shouldErr: false,
+		},
+		{
+			name: "skip-no-primary: no primary",
+			req: &vtctldatapb.ValidateSchemaKeyspaceRequest{
+				Keyspace:      "ks2",
+				SkipNoPrimary: false,
+			},
+			expected: &vtctldatapb.ValidateSchemaKeyspaceResponse{
+				Results: []string{"no primary in shard ks2/-80"},
+				ResultsByShard: map[string]*vtctldatapb.ValidateShardResponse{
+					"-80": {Results: []string{"no primary in shard ks2/-80"}},
+					"80-": {Results: []string{}},
+				},
+			},
+			setup: func() {
+				setupSchema(&topodatapb.TabletAlias{
+					Cell: "zone1",
+					Uid:  103,
+				}, schema1)
+				setupSchema(&topodatapb.TabletAlias{
+					Cell: "zone2",
+					Uid:  201,
+				}, schema1)
 			},
 			shouldErr: false,
 		},
