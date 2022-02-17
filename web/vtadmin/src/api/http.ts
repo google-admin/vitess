@@ -429,37 +429,37 @@ export const fetchVTExplain = async <R extends pb.IVTExplainRequest>({ cluster, 
 };
 
 export interface ValidateKeyspaceParams {
-    clusterID: string
-    keyspace: string
-    pingTablets: boolean
+    clusterID: string;
+    keyspace: string;
+    pingTablets: boolean;
 }
 
 export const validateKeyspace = async ({ clusterID, keyspace, pingTablets }: ValidateKeyspaceParams) => {
-    const body = JSON.stringify({ pingTablets })
+    const body = JSON.stringify({ pingTablets });
 
     const { result } = await vtfetch(`/api/keyspace/${clusterID}/${keyspace}/validate`, { method: 'put', body });
     const err = vtctldata.ValidateKeyspaceResponse.verify(result);
     if (err) throw Error(err);
 
     return vtctldata.ValidateKeyspaceResponse.create(result);
-}
+};
 
 export interface ValidateSchemaKeyspaceParams {
-    clusterID: string
-    keyspace: string
+    clusterID: string;
+    keyspace: string;
 }
 
-export const validateSchemaKeyspace = async ({ clusterID, keyspace  }: ValidateSchemaKeyspaceParams) => {
+export const validateSchemaKeyspace = async ({ clusterID, keyspace }: ValidateSchemaKeyspaceParams) => {
     const { result } = await vtfetch(`/api/keyspace/${clusterID}/${keyspace}/validate_schema`, { method: 'put' });
     const err = vtctldata.ValidateSchemaKeyspaceResponse.verify(result);
     if (err) throw Error(err);
 
     return vtctldata.ValidateSchemaKeyspaceResponse.create(result);
-}
+};
 
 export interface ValidateVersionKeyspaceParams {
-    clusterID: string
-    keyspace: string
+    clusterID: string;
+    keyspace: string;
 }
 
 export const validateVersionKeyspace = async ({ clusterID, keyspace }: ValidateVersionKeyspaceParams) => {
@@ -468,4 +468,4 @@ export const validateVersionKeyspace = async ({ clusterID, keyspace }: ValidateV
     if (err) throw Error(err);
 
     return vtctldata.ValidateVersionKeyspaceResponse.create(result);
-}
+};
