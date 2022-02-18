@@ -1389,7 +1389,7 @@ func (s *VtctldServer) GetTablets(ctx context.Context, req *vtctldatapb.GetTable
 	}, nil
 }
 
-// GetVersion returns the version string from a tablet
+// GetVersion returns the version of a tablet from its debug vars
 func (s *VtctldServer) GetVersion(ctx context.Context, req *vtctldatapb.GetVersionRequest) (*vtctldatapb.GetVersionResponse, error) {
 	tabletAlias := req.TabletAlias
 	tablet, err := s.ts.GetTablet(ctx, tabletAlias)
@@ -2880,17 +2880,13 @@ func (s *VtctldServer) ValidateSchemaKeyspace(ctx context.Context, req *vtctldat
 	var (
 		referenceSchema *tabletmanagerdatapb.SchemaDefinition
 		referenceAlias  *topodatapb.TabletAlias
-	)
-
-	var (
-		m  sync.Mutex
-		wg sync.WaitGroup
+		m               sync.Mutex
+		wg              sync.WaitGroup
 	)
 
 	// TO DO: Use `IncludeVschema` parameter to determine whether or not to also add results from ValidateVschema to the results array.
 	// Unimplemented for now because ValidateVSchema method is out of scope.
 
-	// Diff all tablets in the other shards
 	for _, shard := range shards[0:] {
 		wg.Add(1)
 		go func(shard string) {
@@ -2948,7 +2944,6 @@ func (s *VtctldServer) ValidateSchemaKeyspace(ctx context.Context, req *vtctldat
 			aliasErrs := concurrency.AllErrorRecorder{}
 
 			for _, alias := range aliases {
-				// Don't diff schemas for self
 				if referenceAlias == alias {
 					continue
 				}
@@ -2987,7 +2982,6 @@ func (s *VtctldServer) ValidateSchemaKeyspace(ctx context.Context, req *vtctldat
 // tablets in a keyspace
 func (s *VtctldServer) ValidateVersionKeyspace(ctx context.Context, req *vtctldatapb.ValidateVersionKeyspaceRequest) (*vtctldatapb.ValidateVersionKeyspaceResponse, error) {
 	keyspace := req.Keyspace
-	// find all the shards
 	shards, err := s.ts.GetShardNames(ctx, keyspace)
 	resp := vtctldatapb.ValidateVersionKeyspaceResponse{
 		Results:        []string{},
@@ -2999,13 +2993,11 @@ func (s *VtctldServer) ValidateVersionKeyspace(ctx context.Context, req *vtctlda
 		return &resp, nil
 	}
 
-	// corner cases
 	if len(shards) == 0 {
 		resp.Results = append(resp.Results, fmt.Sprintf("no shards in keyspace %v", keyspace))
 		return &resp, nil
 	}
 
-	// find the reference version using the first shard's primary
 	si, err := s.ts.GetShard(ctx, keyspace, shards[0])
 	if err != nil {
 		resp.Results = append(resp.Results, fmt.Sprintf("unable to find primary shard %v/%v", keyspace, shards[0]))
@@ -3023,20 +3015,17 @@ func (s *VtctldServer) ValidateVersionKeyspace(ctx context.Context, req *vtctlda
 		return &resp, nil
 	}
 
-	// Mutex for ValidateVersionKeyspaceResponse
-	var m sync.Mutex
+	var validateVersionKeyspaceResponseMutex sync.Mutex
 
 	for _, shard := range shards {
-		m.Lock()
+		validateVersionKeyspaceResponseMutex.Lock()
 		shardResp := vtctldatapb.ValidateShardResponse{
 			Results: []string{},
 		}
 
 		var (
-			// Mutex for ValidateShardResponse
-			sm sync.Mutex
-			// WaitGroup for tablets
-			wg sync.WaitGroup
+			validateShardResponseMutex sync.Mutex
+			tabletWaitGroup            sync.WaitGroup
 		)
 
 		aliases, err := s.ts.FindAllTabletAliasesInShard(ctx, keyspace, shard)
@@ -3045,7 +3034,7 @@ func (s *VtctldServer) ValidateVersionKeyspace(ctx context.Context, req *vtctlda
 			shardResp.Results = append(shardResp.Results, errMessage)
 			resp.Results = append(resp.Results, errMessage)
 			resp.ResultsByShard[shard] = &shardResp
-			m.Unlock()
+			validateVersionKeyspaceResponseMutex.Unlock()
 			continue
 		}
 
@@ -3054,11 +3043,11 @@ func (s *VtctldServer) ValidateVersionKeyspace(ctx context.Context, req *vtctlda
 				continue
 			}
 
-			wg.Add(1)
+			tabletWaitGroup.Add(1)
 			go func(alias *topodatapb.TabletAlias, m *sync.Mutex) {
-				sm.Lock()
-				defer sm.Unlock()
-				defer wg.Done()
+				validateShardResponseMutex.Lock()
+				defer validateShardResponseMutex.Unlock()
+				defer tabletWaitGroup.Done()
 				replicaVersion, err := s.GetVersion(ctx, &vtctldatapb.GetVersionRequest{TabletAlias: alias})
 				if err != nil {
 					shardResp.Results = append(shardResp.Results, fmt.Sprintf("unable to get version for tablet %v: %v", alias, err))
@@ -3068,13 +3057,13 @@ func (s *VtctldServer) ValidateVersionKeyspace(ctx context.Context, req *vtctlda
 				if referenceVersion.Version != replicaVersion.Version {
 					shardResp.Results = append(shardResp.Results, fmt.Sprintf("primary %v version %v is different than replica %v version %v", topoproto.TabletAliasString(referenceAlias), referenceVersion, topoproto.TabletAliasString(alias), replicaVersion))
 				}
-			}(alias, &sm)
+			}(alias, &validateShardResponseMutex)
 		}
 
-		wg.Wait()
+		tabletWaitGroup.Wait()
 		resp.Results = append(resp.Results, shardResp.Results...)
 		resp.ResultsByShard[shard] = &shardResp
-		m.Unlock()
+		validateVersionKeyspaceResponseMutex.Unlock()
 	}
 
 	return &resp, nil
